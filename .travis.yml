@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t kajdom/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true kajdom/react-test npm test
+
+after_success:
+  - docker build -t kajdom/multi-client ./client
+  - docker build -t kajdom/multi-nginx ./nginx
+  - docker build -t kajdom/multi-server ./server
+  - docker build -t kajdom/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  #Take those images and push them to docker hub
+  - docker push kajdom/multi-client
+  - docker push kajdom/multi-nginx
+  - docker push kajdom/multi-server
+  - docker push kajdom/multi-worker
